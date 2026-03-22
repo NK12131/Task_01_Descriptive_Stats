@@ -2,8 +2,11 @@
 ## Money, Messages, and the 2024 Presidential Race: What 246,745 Facebook Ads Reveal
 
 **Author:** Nithin Kumar
+
 **Task:** IST Research Task 1 — Descriptive Statistics
+
 **Dataset:** `fb_ads_president_scored_anon.csv` — 246,745 rows × 40 columns
+
 **Source:** Meta Ad Library (2024 U.S. Presidential Election cycle)
 
 ---
