@@ -1,4 +1,3 @@
-# COMPARISON.md
 ## Pure Python vs. Pandas: A Critical Reflection on `fb_ads_president_scored_anon.csv`
 
 **Author:** Nithin Kumar  
