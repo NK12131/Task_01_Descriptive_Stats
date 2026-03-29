@@ -9,14 +9,16 @@
 
 ## Abstract
 
-This project conducts a descriptive statistical analysis of 246,745 Facebook advertisements collected during the 2024 U.S. Presidential election cycle. Each record represents an ad purchase by an organization whose creative content referenced at least one presidential candidate. The dataset was sourced from the Meta Ad Library and enriched by the Illuminating Project with 28 binary classification flags denoting message type, call to action, thematic topic, and incivility signals. Two independent implementations — one using only the Python standard library (`pure_python_stats.py`) and one leveraging Pandas (`pandas_stats.py`) — were developed to perform equivalent analyses, enabling a methodological comparison of approaches.
+This project conducts a descriptive statistical analysis of 246,745 Facebook advertisements collected during the 2024 U.S. Presidential election cycle. Each record represents an ad purchase by an organization whose creative content referenced at least one presidential candidate. The dataset was sourced from the Meta Ad Library and enriched by the Illuminating Project with 28 binary classification flags denoting message type, call to action, thematic topic, and incivility signals. Two independent implementations, one using only the Python standard library (`pure_python_stats.py`) and one leveraging Pandas (`pandas_stats.py`) were developed to perform equivalent analyses, enabling a methodological comparison of approaches.
 
 ---
 
 ## Dataset
 
 **File:** `fb_ads_president_scored_anon.csv`  
+
 **Shape:** 246,745 rows × 40 columns  
+
 **Source:** Provided via Google Drive by course instructor
 
 | Column Group | Columns | Notes |
@@ -24,14 +26,14 @@ This project conducts a descriptive statistical analysis of 246,745 Facebook adv
 | Identifiers | `page_id`, `ad_id` | Anonymized |
 | Categorical | `page_name`, `bylines`, `currency`, `publisher_platforms` | |
 | Dates | `ad_creation_time`, `ad_delivery_start_time`, `ad_delivery_stop_time` | YYYY-MM-DD strings |
-| Dict-strings | `spend`, `impressions`, `estimated_audience_size` | Stored as `{'lower_bound': '...', 'upper_bound': '...'}` — requires parsing prior to analysis |
+| Dict-strings | `spend`, `impressions`, `estimated_audience_size` | Stored as `{'lower_bound': '...', 'upper_bound': '...'}` requires parsing prior to analysis |
 | Binary scored | `illuminating_*` (28 columns) | 0/1 flags for message type, topic, and incivility |
 
 ---
 
 ## Summary of Findings
 
-Political ad spending across the 2024 election cycle exhibits sharp concentration: a small number of high-spending organizations account for a disproportionate share of total expenditure, while the vast majority of advertisers occupy a long, low-spend tail. This pattern is reflected in a markedly right-skewed spend distribution, where the median spend per ad (lower bound) falls well below the mean — an artifact of a handful of exceptionally high-spend placements inflating the average.
+Political ad spending across the 2024 election cycle exhibits sharp concentration: a small number of high-spending organizations account for a disproportionate share of total expenditure, while the vast majority of advertisers occupy a long, low-spend tail. This pattern is reflected in a markedly right-skewed spend distribution, where the median spend per ad (lower bound) falls well below the mean, an artifact of a handful of exceptionally high-spend placements inflating the average.
 
 Temporal analysis reveals that monthly ad volume closely tracks the electoral calendar. Pronounced spikes correspond to Super Tuesday (March), the first presidential debate (June), President Biden's withdrawal from the race (July), the Harris-Trump debate (September), and a sustained peak in the weeks immediately preceding Election Day (November), underscoring the responsiveness of political advertising to campaign-defining events.
 
@@ -43,7 +45,7 @@ For the full narrative analysis, see [FINDINGS.md](FINDINGS.md).
 
 ## Methodological Comparison
 
-The three financial columns — `spend`, `impressions`, and `estimated_audience_size` — are stored as dict-strings rather than numeric values, requiring explicit bound extraction before any statistical computation. This parsing requirement surfaced unavoidably in the pure Python implementation, where no abstraction layer could obscure it. The Pandas implementation, without the parsing step, would have silently excluded these columns from all numeric summaries — a meaningful silent failure that the pure Python approach makes impossible.
+The three financial columns — `spend`, `impressions`, and `estimated_audience_size` — are stored as dict-strings rather than numeric values, requiring explicit bound extraction before any statistical computation. This parsing requirement surfaced unavoidably in the pure Python implementation, where no abstraction layer could obscure it. The Pandas implementation, without the parsing step, would have silently excluded these columns from all numeric summaries, a meaningful silent failure that the pure Python approach makes impossible.
 
 One statistical discrepancy warrants acknowledgment: the pure Python script computes population standard deviation (dividing by N), whereas Pandas `.std()` applies Bessel's correction and computes sample standard deviation (dividing by N−1). At a sample size of 246,745, the practical difference between the two is negligible.
 
@@ -74,8 +76,46 @@ Task_01_Descriptive_Stats/
 ## Data Source & Reproducibility
 
 - **Dataset link:** *(insert Google Drive link provided by instructor)*
-- **Filename:** `fb_ads_president_scored_anon.csv` — place in the project root alongside the scripts
+- **Filename:** `fb_ads_president_scored_anon.csv`, place in the project root alongside the scripts
 - Both scripts are fully deterministic. No random seeds are required; repeated execution on the same input file produces identical output.
+
+---
+
+## How to Run
+
+### 1. Obtain the dataset
+Download `fb_ads_president_scored_anon.csv` from the Google Drive link provided by the course instructor and place it in the project root alongside the scripts:
+
+```
+Task_01_Descriptive_Stats/
+├── fb_ads_president_scored_anon.csv   ← place here
+├── pure_python_stats.py
+├── pandas_stats.py
+```
+
+### 2. Install dependencies (Pandas script only)
+
+```bash
+pip install -r requirements.txt
+```
+
+`pure_python_stats.py` requires no installation — only the Python standard library.
+
+### 3. Run the scripts
+
+**Pure Python** (no dependencies, ~25–35 seconds):
+```bash
+python pure_python_stats.py
+# or specify the file explicitly:
+python pure_python_stats.py --file fb_ads_president_scored_anon.csv
+```
+
+**Pandas** (~3–5 seconds):
+```bash
+python pandas_stats.py
+# with visualizations saved to ./visualizations/:
+python pandas_stats.py --save-plots
+```
 
 ---
 
