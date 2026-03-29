@@ -1,8 +1,10 @@
-## Pure Python vs. Pandas: A Critical Reflection on `fb_ads_president_scored_anon.csv`
+# Pure Python vs. Pandas: A Methodological Reflection
 
-**Author:** Nithin Kumar  
-**Task:** IST Research Task 1 — Descriptive Statistics  
-**Dataset:** `fb_ads_president_scored_anon.csv`  (246,745 rows × 40 columns)
+**Author:** Nithin Kumar
+
+**Task:** IST Research Task 1 — Descriptive Statistics
+
+**Dataset:** `fb_ads_president_scored_anon.csv` (246,745 rows × 40 columns)
 
 ---
 
@@ -10,56 +12,54 @@
 
 **Yes — with two documented exceptions.**
 
-For count, mean, min, max, and median the two scripts produce matching values on the same parsed column. The exceptions are:
+Across all shared metrics — count, mean, minimum, maximum, and median — both implementations produce numerically identical results on the same parsed columns. The two exceptions are as follows.
 
 ### 1. Standard Deviation
 
-| | Formula | Denominator | Result on spend_lower |
-|---|---|---|---|
-| Pure Python (`std_population`) | Population σ | N | slightly smaller |
-| Pandas `Series.std()` | Sample σ | N−1 (Bessel's correction) | default |
-| Pandas `Series.std(ddof=0)` | Population σ | N | matches pure Python |
+| Implementation | Formula | Denominator |
+|---|---|---|
+| Pure Python (`std_population`) | Population σ | N |
+| Pandas `Series.std()` | Sample σ (Bessel's correction) | N−1 |
+| Pandas `Series.std(ddof=0)` | Population σ | N — matches pure Python |
 
-For 246,745 rows the difference is negligible (< 0.001%). For any subgroup analysis with a small N — say, ads from a single minor advertiser — the difference becomes material. Section 8 of `pandas_stats.py` prints a live numerical comparison.
+At 246,745 rows, the divergence is negligible (< 0.001%). However, in any subgroup analysis with a small N, ads from a single minor advertiser, for instance, the distinction becomes material and should be made deliberately rather than inherited from a library default.
 
 ### 2. Missing Value Detection
 
-The raw CSV has blank cells (`""`), which both scripts agree are missing. But Pandas `isna()` returns `False` for the literal string `"nan"` (since it is stored as a string, not a float NaN). My pure Python `is_missing()` function explicitly handles that case. The impact on this dataset was minimal — the blank/missing pattern was consistent — but the difference is real and worth knowing.
+Both scripts agree that blank cells (`""`) constitute missing values. Pandas `isna()`, however, returns `False` for the literal string `"nan"`, since it is stored as a string rather than a float NaN. The pure Python `is_missing()` function handles this case explicitly. The practical impact on this dataset was minimal, but the behavioral difference is real and would matter in dirtier data.
 
 ---
 
-## Where Did Pure Python Force Explicit Decisions?
+## Where Pure Python Forced Explicit Decisions
 
-### A. Parsing dict-string columns
-The three most analytically important columns — `spend`, `impressions`, and `estimated_audience_size` — are not numeric. They look like:
+### Parsing Dict-String Columns
+
+The three analytically central columns, `spend`, `impressions`, and `estimated_audience_size`, are not stored as numeric values. Their raw format is:
 
 ```
 {'lower_bound': '45000', 'upper_bound': '49999'}
-{'lower_bound': '1000001'}          ← open-ended, no upper bound
+{'lower_bound': '1000001'}          ← open-ended; no upper bound present
 ```
 
-Pandas `describe()` would simply report 0 numeric rows on these columns if you don't parse them first. I had to write `extract_bounds()` in pure Python and `parse_bound()` in Pandas using `ast.literal_eval`. Both scripts make the same parsing decision explicitly, but writing the pure Python version first made me think through the edge cases:
-- What if `upper_bound` is absent? (treat as equal to `lower_bound`)
-- What if the string is empty or malformed? (return None / NaN)
-- Should I use lower bound, upper bound, or midpoint? (I report all three; lower bound is the conservative estimate)
+Without an explicit parsing step, Pandas `describe()` silently treats these columns as `object` dtype and excludes them from all numeric summaries, producing no useful statistics on the most important variables in the dataset. Writing the pure Python implementation first made this failure mode impossible to overlook. It forced deliberate decisions on every edge case: how to handle an absent `upper_bound` (treat as equal to `lower_bound`); how to handle malformed or empty strings (return `None`); and whether to report lower bound, upper bound, or midpoint (all three are reported; lower bound serves as the conservative estimate).
 
-Pandas would have silently left those as `object` dtype had I not added the parsing step myself.
+### Binary Classification Columns
 
-### B. Illuminating binary columns
-The 28 `illuminating_*` columns store `0`, `1`, or NaN — but in the raw CSV some are stored as `0.0` and `1.0` (float strings). My pure Python script checks for `"1"`, `"1.0"`, `"True"`, `"true"` in a single condition. Pandas `pd.to_numeric(errors='coerce')` handles this silently, but I had to make the same multi-case decision explicitly in pure Python.
+The 28 `illuminating_*` columns nominally store `0` or `1`, but the raw CSV contains mixed representations `"0"`, `"1"`, `"0.0"`, `"1.0"` — depending on how the field was serialized. Pandas `pd.to_numeric(errors='coerce') resolves this silently. The pure Python implementation required an explicit multi-case condition covering each representation, which surfaced the inconsistency directly rather than abstracting it away.
 
-### C. Date format
-Dates in this dataset are stored as `YYYY-MM-DD` strings (e.g., `2024-10-28`), not ISO 8601 with timestamps. The pure Python version uses `datetime.strptime(v[:10], "%Y-%m-%d")`, which forced me to notice the consistent format and confirm there were no outlier rows with different formatting. `pd.to_datetime(errors='coerce')` would have quietly parsed or silently coerced those without me noticing.
+### Date Formatting
+
+Dates are stored as `YYYY-MM-DD` strings rather than full ISO 8601 timestamps. The pure Python script parses these with `datetime.strptime(v[:10], "%Y-%m-%d")`, which required confirming the format was consistent across all 246,745 rows before the script could proceed without error. Pandas `pd.to_datetime(errors='coerce') would have handled malformed rows silently, a convenience that can obscure data quality issues in less uniform datasets.
 
 ---
 
-## What Did Writing the Pure Python Version First Teach Me?
+## What the Manual Implementation Revealed
 
-**The spend distribution is far more right-skewed than it appears.** When I computed the mean ($≈X) and then the median (likely far lower) manually, the gap was jarring — it immediately flagged that a small number of very high-spend ads were pulling the mean up. Seeing the raw percentile computation drove that insight home in a way that reading `describe()` output might not have.
+**The spend distribution is more skewed than summary statistics suggest.** Computing the mean and median by hand — and watching the gap between them emerge — made the right-skew visceral in a way that reading `describe()` output does not. A small number of very high-spend placements pull the mean substantially above the median, a pattern that became analytically obvious only through the manual computation.
 
-**Page name is not a clean advertiser identifier.** When I built the per-page spend aggregation in pure Python, I noticed that some `page_name` values were clearly the same organization with slightly different spellings or capitalization. Pandas `.groupby()` would make the same mistake, but writing the aggregation manually made me look at the data closely enough to notice the inconsistency.
+**Page name is an unreliable advertiser identifier.** Building the per-page spend aggregation manually required reading the `page_name` values directly, which revealed that some organizations appear under slightly varying spellings or capitalizations across different ads. Pandas `.groupby()` makes the same mistake, but silently, the manual approach created enough friction to surface the inconsistency.
 
-**Open-ended audience size buckets are common.** The `estimated_audience_size` column frequently contains `{'lower_bound': '1000001'}` with no upper bound — meaning the audience was reported only as "more than 1 million." If I had passed this column to Pandas without parsing, I would have gotten NaN for all of those rows and underestimated the scale of many large campaigns.
+**Open-ended audience size estimates are pervasive.** The `estimated_audience_size` column frequently reports only a lower bound `{'lower_bound': '1000001'}` with no upper bound — indicating that the audience exceeded one million but was not further quantified. Passing this column to Pandas without parsing would have returned NaN for every such row, systematically underrepresenting the reach of the largest campaigns in the dataset.
 
 ---
 
@@ -67,16 +67,16 @@ Dates in this dataset are stored as `YYYY-MM-DD` strings (e.g., `2024-10-28`), n
 
 | Dimension | Pure Python | Pandas |
 |---|---|---|
-| Runtime (246K rows) | ~25–35 seconds | ~3–5 seconds |
-| Memory | Lower (one list per column) | Higher (full DataFrame in RAM) |
+| Runtime (246,745 rows) | ~25–35 seconds | ~3–5 seconds |
+| Memory footprint | Lower — one list per column | Higher — full DataFrame in RAM |
 | Lines of code | ~310 | ~260 |
-| Flexibility | Full control over every step | Rich built-in methods |
-| Debugging transparency | Clear — your own code | Opaque — library internals |
+| Control over computation | Explicit at every step | Delegated to library internals |
+| Debugging transparency | High | Low |
 
-The ~8× speed difference matters at this scale. For a dataset ten times larger, pure Python would become impractical without streaming optimizations. Pandas's vectorized operations are not just convenient — they are genuinely the correct tool for production analysis.
+The approximately 8× speed differential is consequential at this scale and would become prohibitive on a dataset an order of magnitude larger without streaming optimizations. Pandas' vectorized operations are not merely convenient — for production-scale analysis, they represent the technically appropriate choice.
 
 ---
 
 ## Conclusion
 
-The most important insight from this exercise: **Pandas `describe()` can only be trusted if you first understand what it's computing and what it's skipping.** On this dataset, running `describe()` without first parsing `spend`, `impressions`, and `estimated_audience_size` would have returned no useful numeric statistics at all — those columns would have been treated as `object` dtype and excluded entirely. The pure Python version forced me to confront and solve that problem before I could get any output. That is the pedagogical value of writing the manual version first.
+The central lesson of this exercise is that **Pandas `describe()` can only be trusted if the analyst first understands what it is computing and, critically, what it is silently skipping.** On this dataset, invoking `describe()` without first parsing `spend`, `impressions`, and `estimated_audience_size` would have returned no numeric statistics whatsoever on the three most important columns; they would have been silently excluded as `object` dtype. The pure Python implementation made that failure mode structurally impossible: there was no output until the parsing problem was solved. That is the pedagogical value of writing the manual version first — not to produce a faster or cleaner result, but to ensure that every assumption underlying the analysis is made consciously.
