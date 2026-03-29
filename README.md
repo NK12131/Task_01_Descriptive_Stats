@@ -45,7 +45,7 @@ For the full narrative analysis, see [FINDINGS.md](FINDINGS.md).
 
 ## Methodological Comparison
 
-The three financial columns — `spend`, `impressions`, and `estimated_audience_size` — are stored as dict-strings rather than numeric values, requiring explicit bound extraction before any statistical computation. This parsing requirement surfaced unavoidably in the pure Python implementation, where no abstraction layer could obscure it. The Pandas implementation, without the parsing step, would have silently excluded these columns from all numeric summaries, a meaningful silent failure that the pure Python approach makes impossible.
+The three financial columns  `spend`, `impressions`, and `estimated_audience_size`  are stored as dict-strings rather than numeric values, requiring explicit bound extraction before any statistical computation. This parsing requirement surfaced unavoidably in the pure Python implementation, where no abstraction layer could obscure it. The Pandas implementation, without the parsing step, would have silently excluded these columns from all numeric summaries, a meaningful silent failure that the pure Python approach makes impossible.
 
 One statistical discrepancy warrants acknowledgment: the pure Python script computes population standard deviation (dividing by N), whereas Pandas `.std()` applies Bessel's correction and computes sample standard deviation (dividing by N−1). At a sample size of 246,745, the practical difference between the two is negligible.
 
