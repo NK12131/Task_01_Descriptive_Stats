@@ -7,23 +7,16 @@
 
 ---
 
-## What This Project Does
+## Abstract
 
-This project takes a close look at **246,745 Facebook ads** from the 2024 U.S. Presidential election cycle — every row a real ad purchase by an organization whose ad mentioned at least one presidential candidate. The data comes from Meta's Ad Library, enriched by the Illuminating Project with 28 binary flags classifying each ad by message type, call to action, topic, and markers of incivility.
-
-The analysis is split across two independent Python scripts that crunch the same dataset:
-
-- **`pure_python_stats.py`** — built entirely from the Python standard library, no installs required
-- **`pandas_stats.py`** — the faster, visualization-enabled version using Pandas and Matplotlib
-
-Both scripts produce the same findings. The side-by-side comparison is intentional — it's a chance to see what each approach forces you to think about explicitly.
+This project conducts a descriptive statistical analysis of 246,745 Facebook advertisements collected during the 2024 U.S. Presidential election cycle. Each record represents an ad purchase by an organization whose creative content referenced at least one presidential candidate. The dataset was sourced from the Meta Ad Library and enriched by the Illuminating Project with 28 binary classification flags denoting message type, call to action, thematic topic, and incivility signals. Two independent implementations — one using only the Python standard library (`pure_python_stats.py`) and one leveraging Pandas (`pandas_stats.py`) — were developed to perform equivalent analyses, enabling a methodological comparison of approaches.
 
 ---
 
-## The Dataset
+## Dataset
 
-**File:** `fb_ads_president_scored_anon.csv`
-**Shape:** 246,745 rows × 40 columns
+**File:** `fb_ads_president_scored_anon.csv`  
+**Shape:** 246,745 rows × 40 columns  
 **Source:** Provided via Google Drive by course instructor
 
 | Column Group | Columns | Notes |
@@ -31,99 +24,30 @@ Both scripts produce the same findings. The side-by-side comparison is intention
 | Identifiers | `page_id`, `ad_id` | Anonymized |
 | Categorical | `page_name`, `bylines`, `currency`, `publisher_platforms` | |
 | Dates | `ad_creation_time`, `ad_delivery_start_time`, `ad_delivery_stop_time` | YYYY-MM-DD strings |
-| Dict-strings | `spend`, `impressions`, `estimated_audience_size` | Stored as `{'lower_bound': '...', 'upper_bound': '...'}` — must be parsed before analysis |
+| Dict-strings | `spend`, `impressions`, `estimated_audience_size` | Stored as `{'lower_bound': '...', 'upper_bound': '...'}` — requires parsing prior to analysis |
 | Binary scored | `illuminating_*` (28 columns) | 0/1 flags for message type, topic, and incivility |
 
 ---
 
-## Getting Started
+## Summary of Findings
 
-### 1. Clone the repo
+Political ad spending across the 2024 election cycle exhibits sharp concentration: a small number of high-spending organizations account for a disproportionate share of total expenditure, while the vast majority of advertisers occupy a long, low-spend tail. This pattern is reflected in a markedly right-skewed spend distribution, where the median spend per ad (lower bound) falls well below the mean — an artifact of a handful of exceptionally high-spend placements inflating the average.
 
-```bash
-git clone https://github.com/<your-username>/Task_01_Descriptive_Stats.git
-cd Task_01_Descriptive_Stats
-```
+Temporal analysis reveals that monthly ad volume closely tracks the electoral calendar. Pronounced spikes correspond to Super Tuesday (March), the first presidential debate (June), President Biden's withdrawal from the race (July), the Harris-Trump debate (September), and a sustained peak in the weeks immediately preceding Election Day (November), underscoring the responsiveness of political advertising to campaign-defining events.
 
-### 2. Place the dataset
+Among the 28 Illuminating Project classification flags, `illuminating_topic_economy` and `illuminating_topic_governance` register the highest prevalence, consistent with the policy concerns most prominent in public discourse during the 2024 cycle. At the message-type level, advocacy-oriented ads constitute the plurality of the dataset, followed by issue-based messaging; attack advertising, while present, represents a meaningful but secondary share of total volume.
 
-Drop the CSV file into the project root — right alongside the scripts:
-
-```
-Task_01_Descriptive_Stats/
-├── fb_ads_president_scored_anon.csv   ← place here
-├── pure_python_stats.py
-├── pandas_stats.py
-...
-```
-
-### 3. Install dependencies (Pandas script only)
-
-```bash
-pip install -r requirements.txt
-```
-
-The pure Python script needs nothing beyond a standard Python installation.
+For the full narrative analysis, see [FINDINGS.md](FINDINGS.md).
 
 ---
 
-## Running the Scripts
+## Methodological Comparison
 
-### Pure Python
+The three financial columns — `spend`, `impressions`, and `estimated_audience_size` — are stored as dict-strings rather than numeric values, requiring explicit bound extraction before any statistical computation. This parsing requirement surfaced unavoidably in the pure Python implementation, where no abstraction layer could obscure it. The Pandas implementation, without the parsing step, would have silently excluded these columns from all numeric summaries — a meaningful silent failure that the pure Python approach makes impossible.
 
-```bash
-python pure_python_stats.py
-# or specify the file explicitly:
-python pure_python_stats.py --file fb_ads_president_scored_anon.csv
-```
+One statistical discrepancy warrants acknowledgment: the pure Python script computes population standard deviation (dividing by N), whereas Pandas `.std()` applies Bessel's correction and computes sample standard deviation (dividing by N−1). At a sample size of 246,745, the practical difference between the two is negligible.
 
-Expect a runtime of roughly **25–35 seconds** on the full 246K-row dataset — no C extensions means it does the work the hard way.
-
-### Pandas
-
-```bash
-python pandas_stats.py
-# with visualizations:
-python pandas_stats.py --save-plots
-```
-
-Substantially faster at **3–5 seconds**. The `--save-plots` flag writes five charts to `./visualizations/`:
-
-| File | What It Shows |
-|---|---|
-| `01_spend_distribution.png` | Per-ad spend histogram, both linear and log scale |
-| `02_top_spenders.png` | Top 15 advertisers ranked by total spend |
-| `03_monthly_volume.png` | Monthly ad count with key election events marked |
-| `04_topic_prevalence.png` | How often each topic flag appears across all ads |
-| `05_message_types.png` | Breakdown of advocacy, attack, issue, image, and CTA ads |
-
----
-
-## What the Data Shows
-
-Full narrative analysis: [FINDINGS.md](FINDINGS.md)
-
-- **Spending is extremely concentrated.** A handful of top advertisers account for a disproportionate share of total spend, with everyone else forming a very long tail of small placements.
-
-- **The election calendar is visible in the data.** Monthly ad volume spikes around Super Tuesday (March), the June debate, Biden's July withdrawal, the Harris-Trump September debate, and peaks sharply in the final days before November.
-
-- **Economy and governance lead topic coverage.** The `illuminating_topic_economy` and `illuminating_topic_governance` flags are the most frequently triggered — a clean reflection of the issues voters cared most about in 2024.
-
-- **Advocacy ads dominate.** Issue-based messaging comes second. Attack ads make up a meaningful minority of the total.
-
-- **Spend distributions are sharply right-skewed.** The median spend per ad sits well below the mean — a small number of very high-spend placements pull the average up considerably.
-
----
-
-## Pure Python vs. Pandas: What the Comparison Reveals
-
-Full reflection: [COMPARISON.md](COMPARISON.md)
-
-The three financial columns — `spend`, `impressions`, and `estimated_audience_size` — are stored as dict-strings, not numbers. Both scripts require an explicit parsing step before any statistics can be computed.
-
-Writing the pure Python version first made this unavoidable; there was no way to accidentally skip it. Pandas, by contrast, would have silently returned nothing on those columns without the parsing step — a good reminder that a tool doing less work for you isn't always a disadvantage.
-
-One numerical difference worth noting: pure Python computes **population standard deviation** (÷ N) while Pandas `.std()` defaults to **sample standard deviation** (÷ N−1). At 246,745 rows, the difference is negligible in practice.
+For the full methodological reflection, see [COMPARISON.md](COMPARISON.md).
 
 ---
 
@@ -135,8 +59,8 @@ Task_01_Descriptive_Stats/
 ├── pandas_stats.py           # Pandas + optional matplotlib/seaborn
 ├── requirements.txt          # pandas, numpy, matplotlib, seaborn
 ├── README.md                 # This file
-├── FINDINGS.md               # 2-page narrative analysis
-├── COMPARISON.md             # Reflection on the two approaches
+├── FINDINGS.md               # Full narrative analysis
+├── COMPARISON.md             # Pure Python vs. Pandas reflection
 └── visualizations/           # Auto-created by --save-plots
     ├── 01_spend_distribution.png
     ├── 02_top_spenders.png
@@ -151,7 +75,17 @@ Task_01_Descriptive_Stats/
 
 - **Dataset link:** *(insert Google Drive link provided by instructor)*
 - **Filename:** `fb_ads_president_scored_anon.csv` — place in the project root alongside the scripts
-- Both scripts are fully deterministic — no random seeds needed. Running them twice on the same file produces identical output.
+- Both scripts are fully deterministic. No random seeds are required; repeated execution on the same input file produces identical output.
 
 ---
 
+## Dependencies
+
+| Package | Version | Required by |
+|---|---|---|
+| pandas | ≥ 2.0.0 | `pandas_stats.py` |
+| numpy | ≥ 1.24.0 | `pandas_stats.py` |
+| matplotlib | ≥ 3.7.0 | `pandas_stats.py --save-plots` (optional) |
+| seaborn | ≥ 0.12.0 | `pandas_stats.py --save-plots` (optional) |
+
+`pure_python_stats.py` has **zero external dependencies**.
