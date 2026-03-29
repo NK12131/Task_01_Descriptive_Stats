@@ -1,24 +1,3 @@
-"""
-pandas_stats.py
-===============
-Descriptive statistics for: fb_ads_president_scored_anon.csv
-246,745 rows × 40 columns — 2024 Facebook Political Ads (Meta Ad Library)
-
-Author: Nithin Kumar
-Course: IST Research Task 1 — Descriptive Statistics
-
-Key design decisions:
-  - spend / impressions / estimated_audience_size are stored as dict-strings
-    e.g. "{'lower_bound': '45000', 'upper_bound': '49999'}"
-    This script parses them into numeric lower/upper/midpoint columns.
-  - illuminating_* binary columns are analyzed as a group for prevalence.
-  - Visualizations are saved to ./visualizations/ if --save-plots is passed.
-
-Usage:
-    python pandas_stats.py
-    python pandas_stats.py --file fb_ads_president_scored_anon.csv --save-plots
-"""
-
 import os, sys, ast, argparse, warnings
 import pandas as pd
 import numpy as np
@@ -102,7 +81,7 @@ def load(filepath):
 
 
 # ─────────────────────────────────────────────────
-# SECTION 1 — STRUCTURE
+# STRUCTURE
 # ─────────────────────────────────────────────────
 def section_structure(df):
     print(f"\n{'═'*72}")
@@ -119,7 +98,7 @@ def section_structure(df):
 
 
 # ─────────────────────────────────────────────────
-# SECTION 2 — MISSING VALUES
+# MISSING VALUES
 # ─────────────────────────────────────────────────
 def section_missing(df):
     print(f"\n{SEP}")
@@ -143,7 +122,7 @@ def section_missing(df):
 
 
 # ─────────────────────────────────────────────────
-# SECTION 3 — NUMERIC SUMMARY (parsed dict cols)
+# NUMERIC SUMMARY (parsed dict cols)
 # ─────────────────────────────────────────────────
 def section_numeric(df):
     print(f"\n{SEP}")
@@ -177,7 +156,7 @@ def section_numeric(df):
 
 
 # ─────────────────────────────────────────────────
-# SECTION 4 — CATEGORICAL SUMMARY
+# CATEGORICAL SUMMARY
 # ─────────────────────────────────────────────────
 def section_categorical(df):
     print(f"\n{SEP}")
@@ -211,7 +190,7 @@ def section_categorical(df):
 
 
 # ─────────────────────────────────────────────────
-# SECTION 5 — TOP SPENDERS
+# TOP SPENDERS
 # ─────────────────────────────────────────────────
 def section_spending(df):
     print(f"\n{SEP}")
@@ -261,7 +240,7 @@ def section_spending(df):
 
 
 # ─────────────────────────────────────────────────
-# SECTION 6 — TEMPORAL
+# TEMPORAL
 # ─────────────────────────────────────────────────
 def section_temporal(df):
     print(f"\n{SEP}")
@@ -314,7 +293,7 @@ def section_temporal(df):
 
 
 # ─────────────────────────────────────────────────
-# SECTION 7 — ILLUMINATING BINARY COLUMNS
+# ILLUMINATING BINARY COLUMNS
 # ─────────────────────────────────────────────────
 def section_illuminating(df):
     print(f"\n{SEP}")
@@ -357,7 +336,7 @@ def section_illuminating(df):
 
 
 # ─────────────────────────────────────────────────
-# SECTION 8 — CROSS-VALIDATION vs PURE PYTHON
+# CROSS-VALIDATION vs PURE PYTHON
 # ─────────────────────────────────────────────────
 def section_comparison(df):
     print(f"\n{SEP}")
