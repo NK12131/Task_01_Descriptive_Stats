@@ -1,27 +1,3 @@
-"""
-pure_python_stats.py
-====================
-Descriptive statistics for: fb_ads_president_scored_anon.csv
-246,745 rows × 40 columns — 2024 Facebook Political Ads (Meta Ad Library)
-Uses ONLY Python standard library: csv, math, collections, ast, datetime.
-No pandas, no numpy, no third-party packages.
-
-Author: Nithin Kumar
-Course: IST Research Task 1 — Descriptive Statistics
-
-Dataset columns (40 total):
-  Identifiers  : page_id, ad_id
-  Categorical  : page_name, bylines, currency, publisher_platforms
-  Date strings : ad_creation_time, ad_delivery_start_time, ad_delivery_stop_time
-  Dict-strings : estimated_audience_size, impressions, spend
-                 (stored as "{'lower_bound': '1000', 'upper_bound': '4999'}")
-  Binary/scored: illuminating_* (28 columns, values 0/1/NaN)
-
-Usage:
-    python pure_python_stats.py
-    python pure_python_stats.py --file fb_ads_president_scored_anon.csv
-"""
-
 import csv
 import math
 import collections
